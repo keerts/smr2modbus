@@ -1,0 +1,49 @@
+[input]
+host = "192.168.1.203"
+port = 23
+connect_timeout_s = 5
+max_backoff_s = 30
+
+[modbus]
+host = "0.0.0.0"
+port = 1502
+unit_id = 1
+word_order = "high_to_low"
+
+[health]
+freshness_threshold_s = 10
+
+[points.current_l1]
+address = 23312
+data_type = "uint32"
+scale = 0.01
+
+[points.current_l2]
+address = 23314
+data_type = "uint32"
+scale = 0.01
+
+[points.current_l3]
+address = 23316
+data_type = "uint32"
+scale = 0.01
+
+[points.current_n]
+address = 23318
+data_type = "uint32"
+scale = 0.01
+
+[points.real_power_l1]
+address = 23324
+data_type = "int32"
+scale = 0.001
+
+[points.real_power_l2]
+address = 23326
+data_type = "int32"
+scale = 0.001
+
+[points.real_power_l3]
+address = 23328
+data_type = "int32"
+scale = 0.001
