@@ -36,6 +36,7 @@ Bridge SMR v5 telegrams from a telnet stream to Modbus TCP Input Registers.
 - Real Power L3: address `23328`, `SIGNED32`, scale `x0.001 kW`
 
 Word order is configurable: `high_to_low` or `low_to_high`.
+Enable query logging with `modbus.log_register_queries = true`.
 
 ## Run
 

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import struct
 
 from .config import ModbusConfig
@@ -29,6 +30,9 @@ async def _handle_client(
     config: ModbusConfig,
     state: BridgeState,
 ) -> None:
+    peer = writer.get_extra_info("peername")
+    client = f"{peer[0]}:{peer[1]}" if isinstance(peer, tuple) and len(peer) >= 2 else "unknown"
+    logging.info("Modbus client connected: %s", client)
     try:
         while True:
             header = await reader.readexactly(7)
@@ -39,15 +43,46 @@ async def _handle_client(
             function_code = pdu[0]
 
             if unit_id != config.unit_id:
+                if config.log_register_queries:
+                    logging.info(
+                        "Modbus query ignored from %s: fc=%s unit=%s expected_unit=%s",
+                        client,
+                        function_code,
+                        unit_id,
+                        config.unit_id,
+                    )
                 continue
 
             if function_code not in {3, 4}:
                 body = _exception(function_code, 0x01)
+                if config.log_register_queries:
+                    logging.info(
+                        "Modbus query from %s: fc=%s unsupported",
+                        client,
+                        function_code,
+                    )
             elif len(pdu) != 5:
                 body = _exception(function_code, 0x03)
+                if config.log_register_queries:
+                    logging.info(
+                        "Modbus query from %s: fc=%s invalid_pdu_length=%s",
+                        client,
+                        function_code,
+                        len(pdu),
+                    )
             else:
                 start, quantity = struct.unpack(">HH", pdu[1:5])
                 body = _build_read_response(function_code, start, quantity, state)
+                if config.log_register_queries:
+                    end = start + quantity - 1
+                    logging.info(
+                        "Modbus query from %s: fc=%s range=%s-%s qty=%s",
+                        client,
+                        function_code,
+                        start,
+                        end,
+                        quantity,
+                    )
 
             mbap = struct.pack(">HHHB", transaction_id, 0, len(body) + 1, unit_id)
             writer.write(mbap + body)
@@ -55,6 +90,7 @@ async def _handle_client(
     except asyncio.IncompleteReadError:
         pass
     finally:
+        logging.info("Modbus client disconnected: %s", client)
         writer.close()
         await writer.wait_closed()
 

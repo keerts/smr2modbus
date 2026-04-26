@@ -6,9 +6,10 @@ max_backoff_s = 30
 
 [modbus]
 host = "0.0.0.0"
-port = 1502
+port = 502
 unit_id = 1
 word_order = "high_to_low"
+log_register_queries = true
 
 [health]
 freshness_threshold_s = 10
