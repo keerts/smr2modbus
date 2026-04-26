@@ -51,3 +51,61 @@ Health endpoint defaults to `http://0.0.0.0:8080` and returns JSON readiness sta
 ```bash
 python3 -m unittest discover -s tests -p "test_*.py"
 ```
+
+## Docker
+
+Build locally:
+
+```bash
+docker build -t smr2modbus:local .
+```
+
+Run locally with mounted config and published Modbus/health ports:
+
+```bash
+docker run --rm \
+  -p 502:502 \
+  -p 8080:8080 \
+  -v "$(pwd)/config.example.toml:/app/config.toml:ro" \
+  smr2modbus:local \
+  --config /app/config.toml
+```
+
+## GHCR Publishing and Tags
+
+This repository publishes container images to `ghcr.io/<owner>/smr2modbus`.
+
+Tag channels:
+
+- `edge`: moving development tag published from `master`
+- `sha-<shortsha>`: immutable commit tag published from `master` and releases
+- `vX.Y.Z`: immutable release tag published from git tags like `v1.2.3`
+- `vX`: moving major tag published on releases (for example `v1`)
+- `latest`: moving stable tag published only on releases
+
+Branch pushes do not move stable channels (`latest` and `vX`).
+
+## NAS Deployment Guidance
+
+Recommended tracking strategy:
+
+- Track `vX` (for example `ghcr.io/<owner>/smr2modbus:v1`) for stable updates within one major line.
+- Pin `vX.Y.Z` when you need strict change control.
+
+Rollback:
+
+- Repoint deployment to the previous immutable tag (for example from `v1.2.4` back to `v1.2.3`).
+
+## Release Process
+
+1. Merge release-ready changes into `master`.
+2. Create and push a SemVer git tag (for example `v1.0.0`).
+3. Wait for the `Publish Container` workflow to publish `vX.Y.Z`, `vX`, `latest`, and `sha-<shortsha>`.
+4. Verify pull and startup with your target config.
+
+Example:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```

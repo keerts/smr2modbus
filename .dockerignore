@@ -1,0 +1,10 @@
+.git
+.github
+.opencode
+openspec
+tests
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+*.log
