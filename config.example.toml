@@ -1,5 +1,5 @@
 [input]
-host = "192.168.1.203"
+host = "meter.local"
 port = 23
 connect_timeout_s = 5
 max_backoff_s = 30
