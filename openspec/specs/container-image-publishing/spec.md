@@ -1,10 +1,8 @@
 # container-image-publishing Specification
 
 ## Purpose
-Define a reliable container publishing contract for `smr2modbus` so NAS deployments can consume stable images from GHCR with clear versioning and rollback paths.
-
+TBD - created by archiving change publish-ghcr-container. Update Purpose after archive.
 ## Requirements
-
 ### Requirement: Release images MUST be published to GHCR on SemVer tags
 The publish pipeline MUST build and push an image to `ghcr.io/<owner>/smr2modbus` whenever a git tag matching `v*` is created.
 
@@ -41,3 +39,4 @@ Each release publish MUST include at least one immutable version tag and one com
 - **WHEN** release `v1.2.4` causes regression
 - **THEN** operator can pin deployment to prior immutable tag (for example `v1.2.3`)
 - **AND** release artifacts can be traced to source commit via `sha-<shortsha>`
+
