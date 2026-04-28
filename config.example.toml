@@ -10,6 +10,7 @@ port = 502
 unit_id = 1
 word_order = "high_to_low"
 log_register_queries = true
+log_protocol_debug = false
 
 [health]
 freshness_threshold_s = 10

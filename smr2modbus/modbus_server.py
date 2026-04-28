@@ -37,6 +37,16 @@ async def _handle_client(
         while True:
             header = await reader.readexactly(7)
             transaction_id, protocol_id, length, unit_id = struct.unpack(">HHHB", header)
+            if config.log_protocol_debug:
+                logging.info(
+                    "Modbus MBAP from %s: raw=%s tx_id=%s proto=%s len=%s unit=%s",
+                    client,
+                    header.hex(),
+                    transaction_id,
+                    protocol_id,
+                    length,
+                    unit_id,
+                )
             if protocol_id != 0 or length < 2:
                 if config.log_register_queries:
                     logging.info(
@@ -48,6 +58,8 @@ async def _handle_client(
                 return
             pdu = await reader.readexactly(length - 1)
             function_code = pdu[0]
+            if config.log_protocol_debug:
+                logging.info("Modbus PDU from %s: raw=%s", client, pdu.hex())
 
             if unit_id != config.unit_id:
                 if config.log_register_queries:
@@ -92,6 +104,8 @@ async def _handle_client(
                     )
 
             mbap = struct.pack(">HHHB", transaction_id, 0, len(body) + 1, unit_id)
+            if config.log_protocol_debug:
+                logging.info("Modbus response to %s: mbap=%s pdu=%s", client, mbap.hex(), body.hex())
             writer.write(mbap + body)
             await writer.drain()
     except asyncio.IncompleteReadError:

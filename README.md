@@ -37,6 +37,7 @@ Bridge SMR v5 telegrams from a telnet stream to Modbus TCP Input Registers.
 
 Word order is configurable: `high_to_low` or `low_to_high`. For Alfen, choose `high_to_low`
 Enable query logging with `modbus.log_register_queries = true`.
+Enable protocol frame logging with `modbus.log_protocol_debug = true`.
 
 ## Run
 

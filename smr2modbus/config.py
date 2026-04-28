@@ -20,6 +20,7 @@ class ModbusConfig:
     unit_id: int
     word_order: str
     log_register_queries: bool
+    log_protocol_debug: bool
 
 
 @dataclass(frozen=True)
@@ -84,6 +85,7 @@ def load_config(path: str | Path) -> AppConfig:
             unit_id=int(_require(modbus_table, "unit_id")),
             word_order=word_order,
             log_register_queries=bool(modbus_table.get("log_register_queries", False)),
+            log_protocol_debug=bool(modbus_table.get("log_protocol_debug", False)),
         ),
         health=HealthConfig(
             freshness_threshold_s=float(health_table.get("freshness_threshold_s", 10.0))
