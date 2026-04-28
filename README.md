@@ -35,7 +35,7 @@ Bridge SMR v5 telegrams from a telnet stream to Modbus TCP Input Registers.
 - Real Power L2: address `23326`, `SIGNED32`, scale `x0.001 kW`
 - Real Power L3: address `23328`, `SIGNED32`, scale `x0.001 kW`
 
-Word order is configurable: `high_to_low` or `low_to_high`.
+Word order is configurable: `high_to_low` or `low_to_high`. For Alfen, choose `high_to_low`
 Enable query logging with `modbus.log_register_queries = true`.
 
 ## Run
@@ -71,6 +71,12 @@ docker run --rm \
   --config /app/config.toml
 ```
 
+Verify published input registers with `mbpoll`:
+
+```bash
+mbpoll -m tcp -a 1 -p 502 -t 4:hex -0 -r 23312 -c 20 127.0.0.1
+```
+
 ## GHCR Publishing and Tags
 
 This repository publishes container images to `ghcr.io/<owner>/smr2modbus`.
@@ -85,7 +91,7 @@ Tag channels:
 
 Branch pushes do not move stable channels (`latest` and `vX`).
 
-## NAS Deployment Guidance
+## Deployment Guidance
 
 Recommended tracking strategy:
 
