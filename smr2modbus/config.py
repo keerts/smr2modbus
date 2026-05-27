@@ -65,10 +65,15 @@ def load_config(path: str | Path) -> AppConfig:
 
     points: dict[str, PointConfig] = {}
     for name, cfg in points_table.items():
+        data_type = str(_require(cfg, "data_type"))
+        if data_type not in {"uint16", "int16"}:
+            raise ValueError(
+                f"points.{name}.data_type must be 'uint16' or 'int16' for compact 16-bit publishing"
+            )
         points[name] = PointConfig(
             name=name,
             address=int(_require(cfg, "address")),
-            data_type=str(_require(cfg, "data_type")),
+            data_type=data_type,
             scale=float(_require(cfg, "scale")),
         )
 

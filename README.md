@@ -25,17 +25,17 @@ Bridge SMR v5 telegrams from a telnet stream to Modbus TCP Input Registers.
 - Real Power L2: `1-0:41.7.0 - 1-0:42.7.0`
 - Real Power L3: `1-0:61.7.0 - 1-0:62.7.0`
 
-## Register Profile (Alfen-friendly default)
+## Register Profile (compact 16-bit)
 
-- Current L1: address `23312`, `UNSIGNED32`, scale `x0.01 A`
-- Current L2: address `23314`, `UNSIGNED32`, scale `x0.01 A`
-- Current L3: address `23316`, `UNSIGNED32`, scale `x0.01 A`
-- Current N: address `23318`, `UNSIGNED32`, scale `x0.01 A`
-- Real Power L1: address `23324`, `SIGNED32`, scale `x0.001 kW`
-- Real Power L2: address `23326`, `SIGNED32`, scale `x0.001 kW`
-- Real Power L3: address `23328`, `SIGNED32`, scale `x0.001 kW`
+- Current L1: address `1`, `UNSIGNED16`, scale `x0.01 A`
+- Current L2: address `2`, `UNSIGNED16`, scale `x0.01 A`
+- Current L3: address `3`, `UNSIGNED16`, scale `x0.01 A`
+- Current N: address `4`, `UNSIGNED16`, scale `x0.01 A`
+- Real Power L1: address `5`, `SIGNED16`, scale `x0.001 kW`
+- Real Power L2: address `6`, `SIGNED16`, scale `x0.001 kW`
+- Real Power L3: address `7`, `SIGNED16`, scale `x0.001 kW`
 
-Word order is configurable: `high_to_low` or `low_to_high`. For Alfen, choose `high_to_low`
+Published values are single 16-bit registers (one register per metric).
 Enable query logging with `modbus.log_register_queries = true`.
 Enable protocol frame logging with `modbus.log_protocol_debug = true`.
 
@@ -75,7 +75,8 @@ docker run --rm \
 Verify published input registers with `mbpoll`:
 
 ```bash
-mbpoll -m tcp -a 1 -p 502 -t 4:hex -0 -r 23312 -c 20 127.0.0.1
+mbpoll -m tcp -a 1 -p 502 -t 4:hex -0 -r 1 -c 7 127.0.0.1
+
 ```
 
 ## GHCR Publishing and Tags

@@ -21,7 +21,7 @@ SAMPLE_TELEGRAM = """/KFM5KAIFA-METER
 """
 
 
-def _config_text(word_order: str) -> str:
+def _config_text() -> str:
     return textwrap.dedent(
         f"""
         [input]
@@ -32,53 +32,53 @@ def _config_text(word_order: str) -> str:
         host = "0.0.0.0"
         port = 1502
         unit_id = 1
-        word_order = "{word_order}"
+        word_order = "high_to_low"
 
         [health]
         freshness_threshold_s = 10
 
         [points.current_l1]
-        address = 23312
-        data_type = "uint32"
+        address = 1
+        data_type = "uint16"
         scale = 0.01
 
         [points.current_l2]
-        address = 23314
-        data_type = "uint32"
+        address = 2
+        data_type = "uint16"
         scale = 0.01
 
         [points.current_l3]
-        address = 23316
-        data_type = "uint32"
+        address = 3
+        data_type = "uint16"
         scale = 0.01
 
         [points.current_n]
-        address = 23318
-        data_type = "uint32"
+        address = 4
+        data_type = "uint16"
         scale = 0.01
 
         [points.real_power_l1]
-        address = 23324
-        data_type = "int32"
+        address = 5
+        data_type = "int16"
         scale = 0.001
 
         [points.real_power_l2]
-        address = 23326
-        data_type = "int32"
+        address = 6
+        data_type = "int16"
         scale = 0.001
 
         [points.real_power_l3]
-        address = 23328
-        data_type = "int32"
+        address = 7
+        data_type = "int16"
         scale = 0.001
         """
     )
 
 
 class ParserRegisterTests(unittest.TestCase):
-    def _load(self, word_order: str):
+    def _load(self):
         with tempfile.NamedTemporaryFile("w+", suffix=".toml") as f:
-            f.write(_config_text(word_order))
+            f.write(_config_text())
             f.flush()
             return load_config(f.name)
 
@@ -91,27 +91,41 @@ class ParserRegisterTests(unittest.TestCase):
         self.assertEqual(metrics.real_power_l2_kw, 0.0)
         self.assertEqual(metrics.real_power_l3_kw, 3.82)
 
-    def test_register_encoding_high_to_low(self) -> None:
-        cfg = self._load("high_to_low")
+    def test_register_encoding_compact_16bit(self) -> None:
+        cfg = self._load()
         metrics = parse_metrics(SAMPLE_TELEGRAM)
         snapshot = build_register_snapshot(cfg, metrics)
 
-        self.assertEqual(snapshot.registers[23312], 0)
-        self.assertEqual(snapshot.registers[23313], 1600)
-        self.assertEqual(snapshot.registers[23318], 0)
-        self.assertEqual(snapshot.registers[23319], 0)
-        self.assertEqual(snapshot.registers[23324], 0)
-        self.assertEqual(snapshot.registers[23325], 3917)
+        self.assertEqual(snapshot.registers[1], 1600)
+        self.assertEqual(snapshot.registers[2], 0)
+        self.assertEqual(snapshot.registers[3], 1600)
+        self.assertEqual(snapshot.registers[4], 0)
+        self.assertEqual(snapshot.registers[5], 3917)
+        self.assertEqual(snapshot.registers[6], 0)
+        self.assertEqual(snapshot.registers[7], 3820)
+        self.assertNotIn(8, snapshot.registers)
 
-    def test_register_encoding_low_to_high(self) -> None:
-        cfg = self._load("low_to_high")
-        metrics = parse_metrics(SAMPLE_TELEGRAM)
+    def test_register_clamp_compact_16bit(self) -> None:
+        cfg = self._load()
+        metrics = parse_metrics(
+            """/KFM5KAIFA-METER
+1-0:31.7.0(999*A)
+1-0:51.7.0(000*A)
+1-0:71.7.0(016*A)
+1-0:21.7.0(99.999*kW)
+1-0:41.7.0(00.000*kW)
+1-0:61.7.0(00.000*kW)
+1-0:22.7.0(00.000*kW)
+1-0:42.7.0(00.000*kW)
+1-0:62.7.0(99.999*kW)
+!0000
+"""
+        )
         snapshot = build_register_snapshot(cfg, metrics)
 
-        self.assertEqual(snapshot.registers[23312], 1600)
-        self.assertEqual(snapshot.registers[23313], 0)
-        self.assertEqual(snapshot.registers[23324], 3917)
-        self.assertEqual(snapshot.registers[23325], 0)
+        self.assertEqual(snapshot.registers[1], 65535)
+        self.assertEqual(snapshot.registers[5], 32767)
+        self.assertEqual(snapshot.registers[7], 0x8000)
 
 
 if __name__ == "__main__":
