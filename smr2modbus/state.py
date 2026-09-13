@@ -39,6 +39,13 @@ class BridgeState:
         with self._lock:
             return self._registers.get(address, 0)
 
+    def has_fresh_snapshot(self, freshness_threshold_s: float) -> bool:
+        with self._lock:
+            if self._status.last_valid_update is None:
+                return False
+            age_seconds = (datetime.now(tz=timezone.utc) - self._status.last_valid_update).total_seconds()
+            return age_seconds <= freshness_threshold_s
+
     def status(self) -> BridgeStatus:
         with self._lock:
             return BridgeStatus(

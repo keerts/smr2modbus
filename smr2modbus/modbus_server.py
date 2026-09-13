@@ -12,9 +12,17 @@ def _exception(function_code: int, code: int) -> bytes:
     return bytes([function_code | 0x80, code])
 
 
-def _build_read_response(function_code: int, start: int, quantity: int, state: BridgeState) -> bytes:
+def _build_read_response(
+    function_code: int,
+    start: int,
+    quantity: int,
+    state: BridgeState,
+    freshness_threshold_s: float,
+) -> bytes:
     if quantity < 1 or quantity > 125:
         return _exception(function_code, 0x03)
+    if not state.has_fresh_snapshot(freshness_threshold_s):
+        return _exception(function_code, 0x04)
 
     payload = bytearray()
     for offset in range(quantity):
@@ -29,6 +37,7 @@ async def _handle_client(
     writer: asyncio.StreamWriter,
     config: ModbusConfig,
     state: BridgeState,
+    freshness_threshold_s: float,
 ) -> None:
     peer = writer.get_extra_info("peername")
     client = f"{peer[0]}:{peer[1]}" if isinstance(peer, tuple) and len(peer) >= 2 else "unknown"
@@ -91,7 +100,7 @@ async def _handle_client(
                     )
             else:
                 start, quantity = struct.unpack(">HH", pdu[1:5])
-                body = _build_read_response(function_code, start, quantity, state)
+                body = _build_read_response(function_code, start, quantity, state, freshness_threshold_s)
                 if config.log_register_queries:
                     end = start + quantity - 1
                     logging.info(
@@ -118,9 +127,9 @@ async def _handle_client(
         await writer.wait_closed()
 
 
-async def run_modbus_server(config: ModbusConfig, state: BridgeState) -> None:
+async def run_modbus_server(config: ModbusConfig, state: BridgeState, freshness_threshold_s: float) -> None:
     server = await asyncio.start_server(
-        lambda r, w: _handle_client(r, w, config, state),
+        lambda r, w: _handle_client(r, w, config, state, freshness_threshold_s),
         host=config.host,
         port=config.port,
     )

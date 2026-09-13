@@ -45,7 +45,7 @@ Enable protocol frame logging with `modbus.log_protocol_debug = true`.
 python3 -m smr2modbus --config config.example.toml
 ```
 
-Health endpoint defaults to `http://0.0.0.0:8080` and returns JSON readiness state.
+Health endpoint defaults to `http://0.0.0.0:8080` and returns JSON readiness state. Modbus reads return exception code `0x04` when the latest valid snapshot is older than `health.freshness_threshold_s`.
 
 ## Tests
 

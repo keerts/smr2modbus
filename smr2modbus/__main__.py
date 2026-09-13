@@ -25,7 +25,7 @@ async def _run() -> None:
 
     await asyncio.gather(
         run_telnet_ingest(config, state),
-        run_modbus_server(config.modbus, state),
+        run_modbus_server(config.modbus, state, config.health.freshness_threshold_s),
         run_health_server(config.health, state, port=args.health_port),
     )
 
