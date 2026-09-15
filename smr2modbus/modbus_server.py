@@ -131,10 +131,21 @@ async def _handle_client(
 
 
 async def run_modbus_server(config: ModbusConfig, state: BridgeState, freshness_threshold_s: float) -> None:
-    server = await asyncio.start_server(
-        lambda r, w: _handle_client(r, w, config, state, freshness_threshold_s),
-        host=config.host,
-        port=config.port,
-    )
-    async with server:
-        await server.serve_forever()
+    while True:
+        if not state.has_fresh_snapshot(freshness_threshold_s):
+            await asyncio.sleep(1)
+            continue
+
+        server = await asyncio.start_server(
+            lambda r, w: _handle_client(r, w, config, state, freshness_threshold_s),
+            host=config.host,
+            port=config.port,
+        )
+        logging.info("Modbus listener started on %s:%s", config.host, config.port)
+        try:
+            while state.has_fresh_snapshot(freshness_threshold_s):
+                await asyncio.sleep(1)
+        finally:
+            logging.warning("Stopping Modbus listener due to stale SMR data")
+            server.close()
+            await server.wait_closed()
