@@ -100,6 +100,9 @@ async def _handle_client(
                     )
             else:
                 start, quantity = struct.unpack(">HH", pdu[1:5])
+                if not state.has_fresh_snapshot(freshness_threshold_s):
+                    logging.warning("Closing Modbus client due to stale SMR data: %s", client)
+                    return
                 body = _build_read_response(function_code, start, quantity, state, freshness_threshold_s)
                 if config.log_register_queries:
                     end = start + quantity - 1
